@@ -110,3 +110,193 @@ server/
 📢 **Importante**: Este reto está diseñado para ser resuelto en 1 o 2 días como máximo. No se espera una arquitectura enterprise, pero sí buenas prácticas y claridad.
 
 🎓 Empresa: [Equip](https://www.equipconstruye.com) - B2B de materiales de construcción en Lima, Perú.
+
+## Running the Project
+
+### Prerequisites
+
+- Node.js
+- MongoDB
+
+### Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Configure environment variables in `.env` file
+
+3. Start the server:
+   ```bash
+   npm run dev
+   ```
+
+4. Access GraphQL playground: http://localhost:4000/graphql
+
+## Testing the API
+
+1. Start the server:
+   ```bash
+   npm run dev
+   ```
+
+2. Open the GraphQL playground at http://localhost:4000/graphql
+
+3. Test the following operations:
+
+### Create Account
+```graphql
+mutation {
+  createAccount(input: {
+    name: "Test Company",
+    email: "test@example.com"
+  }) {
+    _id
+    name
+    email
+    createdAt
+  }
+}
+```
+
+### Get Account by ID
+```graphql
+query {
+  getAccountById(id: "ACCOUNT_ID_HERE") {
+    _id
+    name
+    email
+  }
+}
+```
+
+### List Accounts with Filter
+```graphql
+query {
+  listAccounts(filter: {
+    name: "Test",
+    page: 1,
+    perPage: 10
+  }) {
+    accounts {
+      _id
+      name
+      email
+    }
+    total
+    page
+    perPage
+    totalPages
+  }
+}
+```
+
+### Create Product
+```graphql
+mutation {
+  createProduct(input: {
+    name: "Test Product",
+    sku: "TP-001",
+    stock: 100,
+    accountId: "ACCOUNT_ID_HERE"
+  }) {
+    _id
+    name
+    sku
+    stock
+    accountId
+  }
+}
+```
+
+### Get Product by ID
+```graphql
+query {
+  getProductById(id: "PRODUCT_ID_HERE") {
+    _id
+    name
+    sku
+    stock
+    accountId
+  }
+}
+```
+
+### List Products by Account ID
+```graphql
+query {
+  listProductsByAccountId(accountId: "ACCOUNT_ID_HERE") {
+    _id
+    name
+    sku
+    stock
+  }
+}
+```
+
+### Purchase Product
+```graphql
+mutation {
+  purchaseProduct(
+    accountId: "ACCOUNT_ID_HERE",
+    productId: "PRODUCT_ID_HERE",
+    quantity: 5
+  ) {
+    success
+    message
+    product {
+      _id
+      name
+      stock
+    }
+  }
+}
+```
+
+## Odoo Integration
+
+The project includes XML-RPC integration with Odoo for:
+- Getting client information
+- Creating new clients
+- Updating existing clients
+
+### Testing Odoo Integration
+
+1. Configure Odoo credentials in the `.env` file:
+   ```
+   ODOO_URL='https://your-odoo-instance.com/xmlrpc/2/common'
+   ODOO_DB='your_database'
+   ODOO_UID='your_user_id'
+   ODOO_PASSWORD='your_password'
+   ```
+
+2. You can create a simple test endpoint in your GraphQL schema to test the integration:
+
+```graphql
+# Add to your schema.ts
+extend type Query {
+  testOdooConnection(email: String!): Boolean
+}
+
+# Add to your queries.ts
+import odooService from "../../services/odoo";
+
+testOdooConnection: async (_: any, { email }: { email: string }) => {
+  try {
+    const result = await odooService.getOdooClientInfo(email);
+    console.log("Odoo result:", result);
+    return true;
+  } catch (error) {
+    console.error("Odoo connection error:", error);
+    return false;
+  }
+}
+```
+
+3. Test the connection in GraphQL playground:
+```graphql
+query {
+  testOdooConnection(email: "test@example.com")
+}
+```
